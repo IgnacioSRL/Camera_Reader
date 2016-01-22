@@ -22,8 +22,8 @@ For the compilation you need to link QT and OpenCV libraries. Besides, compiler 
 		while(true){
 			cv::Mat image=cam_reader.get_image();
 			float fps;
-        		bool underflow=cam_reader.get_frame_rate(fps);
-        		cout<<"fps="<<fps<<"          underflow="<<underflow<<endl;
+			bool underflow=cam_reader.get_frame_rate(fps);
+			cout<<"fps="<<fps<<"          underflow="<<underflow<<endl;
 		}
 	}
 ```
