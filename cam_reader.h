@@ -11,8 +11,8 @@ using namespace std;
 class Cam_Reader
 {
 public:
-    Cam_Reader(string direction="", float fps=0);
-    void initialization(string direction="", float fps=0);
+    Cam_Reader(string address="", float fps=0);
+    void initialization(string address="", float fps=0);
     bool get_frame_rate(float &fps);
     cv::Mat get_image();
     bool get_image(cv::Mat &image);

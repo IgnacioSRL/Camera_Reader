@@ -1,12 +1,12 @@
 #include "cam_reader.h"
 
-Cam_Reader::Cam_Reader(string direction, float fps){
-    if(!direction.empty() && direction!="0.0.0.0")
-        initialization(direction,fps);
+Cam_Reader::Cam_Reader(string address, float fps){
+    if(!address.empty() && address!="0.0.0.0")
+        initialization(address,fps);
 }
 
-void Cam_Reader::initialization(string direction, float fps){
-    this->cap.open(direction);
+void Cam_Reader::initialization(string address, float fps){
+    this->cap.open(address);
     if(fps>0)
         this->miliseconds_cycle=1000./fps;
     else
