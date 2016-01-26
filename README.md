@@ -17,7 +17,7 @@ For the compilation you need to link QT and OpenCV libraries. Besides, compiler 
 	int main()
 	{
 		Cam_Reader cam_reader();
-		cam_reader.initialization("your_camera_direction",fps_desired)
+		cam_reader.initialization("your_camera_address",fps_desired)
 		
 		while(true){
 			cv::Mat image=cam_reader.get_image();
