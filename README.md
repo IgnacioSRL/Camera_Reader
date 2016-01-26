@@ -19,7 +19,11 @@ For the compilation you need to link QT and OpenCV libraries. Besides, compiler 
 		Cam_Reader cam_reader();
 		cam_reader.initialization("your_camera_direction",fps_desired)
 		
-		while(true)
+		while(true){
 			cv::Mat image=cam_reader.get_image();
+			float fps;
+			bool underflow=cam_reader.get_frame_rate(fps);
+			cout<<"fps="<<fps<<"          underflow="<<underflow<<endl;
+		}
 	}
 ```
