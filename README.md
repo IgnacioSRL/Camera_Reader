@@ -3,7 +3,7 @@
 Description
 -----------
 Cam_Reader is a C ++ library for reading OpenCV images from a streaming video (such as an IP camera) in an easy way.
-The library solves the problem caused by VideoCapture buffer. This means that the library always gives the ltest captured image.
+The library solves the problem caused by VideoCapture buffer. This means that the library always gives the latest captured image.
 The method can be configured to fix the fps desired. If needed it will wait to keep up with the same fps.
 
 Usage
