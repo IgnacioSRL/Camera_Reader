@@ -1,27 +1,38 @@
 #include "cam_reader.h"
 
-Cam_Reader::Cam_Reader(string address, float fps){
+Cam_Reader::Cam_Reader(string address, float fps, cv::Size image_size){
+    this->initialized=false;
     if(!address.empty() && address!="0.0.0.0")
         initialization(address,fps);
 }
 
-void Cam_Reader::initialization(string address, float fps){
+bool Cam_Reader::initialization(string address, float fps, cv::Size image_size){
+    this->mtx.lock();
     this->cap.open(address);
     if(fps>0)
         this->miliseconds_cycle=1000./fps;
     else
         this->miliseconds_cycle=0;
+    this->image_size=image_size;
+    this->cap.grab();
     std::thread thrd(&Cam_Reader::frame_reader,this);
     thrd.detach();
-    t.start();
+    this->t.start();
+    this->initialized=this->cap.isOpened();
+    this->mtx.unlock();
+    return this->initialized;
+}
+
+bool Cam_Reader::is_initialized(){
+    return this->initialized;
 }
 
 void Cam_Reader::frame_reader(){
     while(true){
         if(this->cap.isOpened()){
-            mtx.lock();
+            this->mtx.lock();
             this->cap.grab();
-            mtx.unlock();
+            this->mtx.unlock();
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
     }
@@ -30,29 +41,33 @@ void Cam_Reader::frame_reader(){
 cv::Mat Cam_Reader::get_image(){
     cv::Mat image;
     if(this->cap.isOpened()){
-        mtx.lock();
+        this->mtx.lock();
         this->cap.retrieve(image);
-        mtx.unlock();
+        this->mtx.unlock();
+        if(this->image_size!=cv::Size())
+            cv::resize(image,image,this->image_size);
     }
     this->underflow=true;
     while(this->miliseconds_cycle-t.elapsed()>0)
         this->underflow=false;
     this->fps_performance=1000./t.elapsed();
-    t.restart();
+    this->t.restart();
     return image;
 }
 
 bool Cam_Reader::get_image(cv::Mat &image){
     if(this->cap.isOpened()){
-        mtx.lock();
+        this->mtx.lock();
         this->cap.retrieve(image);
-        mtx.unlock();
+        this->mtx.unlock();
+        if(this->image_size!=cv::Size())
+            cv::resize(image,image,this->image_size);
     }
     this->underflow=true;
     while(this->miliseconds_cycle-t.elapsed()>0)
         this->underflow=false;
     this->fps_performance=1000./t.elapsed();
-    t.restart();
+    this->t.restart();
     if(image.empty())
         return false;
     return true;
