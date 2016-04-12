@@ -1,12 +1,38 @@
 #include "cam_reader.h"
 
-Cam_Reader::Cam_Reader(string address, float fps, cv::Size image_size){
+Cam_Reader::Cam_Reader(std::string address, float fps, cv::Size image_size){
     this->initialized=false;
     if(!address.empty() && address!="0.0.0.0")
-        initialization(address,fps);
+        initialization(address, fps, image_size);
+}
+Cam_Reader::Cam_Reader(int address, float fps, cv::Size image_size){
+    this->initialized=false;
+    if(address!=-1)
+        initialization(address, fps, image_size);
 }
 
-bool Cam_Reader::initialization(string address, float fps, cv::Size image_size){
+Cam_Reader::~Cam_Reader(){
+    this->cap.release();
+}
+
+bool Cam_Reader::initialization(std::string address, float fps, cv::Size image_size){
+    this->mtx.lock();
+    this->cap.open(address);
+    if(fps>0)
+        this->miliseconds_cycle=1000./fps;
+    else
+        this->miliseconds_cycle=0;
+    this->image_size=image_size;
+    this->cap.grab();
+    std::thread thrd(&Cam_Reader::frame_reader,this);
+    thrd.detach();
+    this->t.start();
+    this->initialized=this->cap.isOpened();
+    this->mtx.unlock();
+    return this->initialized;
+}
+
+bool Cam_Reader::initialization(int address, float fps, cv::Size image_size){
     this->mtx.lock();
     this->cap.open(address);
     if(fps>0)

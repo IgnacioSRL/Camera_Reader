@@ -6,13 +6,14 @@
 #include <mutex>
 #include <opencv2/opencv.hpp>
 
-using namespace std;
-
 class Cam_Reader
 {
 public:
-    Cam_Reader(string address="", float fps=0, cv::Size image_size=cv::Size());
-    bool initialization(string address="", float fps=0, cv::Size image_size=cv::Size());
+    Cam_Reader(std::string address="", float fps=0, cv::Size image_size=cv::Size());
+    Cam_Reader(int address=-1, float fps=0, cv::Size image_size=cv::Size());
+    bool initialization(int address, float fps, cv::Size image_size);
+    ~Cam_Reader();
+    bool initialization(std::string address="", float fps=0, cv::Size image_size=cv::Size());
     bool is_initialized();
     bool get_frame_rate(float &fps);
     cv::Mat get_image();
