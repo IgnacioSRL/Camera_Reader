@@ -5,11 +5,6 @@ Cam_Reader::Cam_Reader(std::string address, float fps, cv::Size image_size){
     if(!address.empty() && address!="0.0.0.0")
         initialization(address, fps, image_size);
 }
-Cam_Reader::Cam_Reader(int address, float fps, cv::Size image_size){
-    this->initialized=false;
-    if(address!=-1)
-        initialization(address, fps, image_size);
-}
 
 Cam_Reader::~Cam_Reader(){
     this->cap.release();
@@ -17,24 +12,18 @@ Cam_Reader::~Cam_Reader(){
 
 bool Cam_Reader::initialization(std::string address, float fps, cv::Size image_size){
     this->mtx.lock();
-    this->cap.open(address);
-    if(fps>0)
-        this->miliseconds_cycle=1000./fps;
-    else
-        this->miliseconds_cycle=0;
-    this->image_size=image_size;
-    this->cap.grab();
-    std::thread thrd(&Cam_Reader::frame_reader,this);
-    thrd.detach();
-    this->t.start();
-    this->initialized=this->cap.isOpened();
-    this->mtx.unlock();
-    return this->initialized;
-}
 
-bool Cam_Reader::initialization(int address, float fps, cv::Size image_size){
-    this->mtx.lock();
-    this->cap.open(address);
+    //Check if the camera address is an ip or a number
+    std::stringstream ss;
+    ss<<address;
+    int num = 0;
+    ss >> num;
+
+    if(ss.good() || (num==0 && ss.str()!="0"))
+        this->cap.open(address);
+    else
+        this->cap.open(num);
+
     if(fps>0)
         this->miliseconds_cycle=1000./fps;
     else
