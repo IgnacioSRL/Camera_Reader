@@ -13,6 +13,7 @@ public:
     ~Cam_Reader();
     bool initialization(std::string address="", float fps=0, cv::Size image_size=cv::Size());
     bool is_initialized();
+    void stop_running();
     bool get_frame_rate(float &fps);
     cv::Mat get_image();
     bool get_image(cv::Mat &image);
@@ -31,6 +32,8 @@ private:
     bool underflow;
 
     //Thread control
+    bool running;
+    std::thread thrd;
     std::mutex mtx;
 
     //Initialized
