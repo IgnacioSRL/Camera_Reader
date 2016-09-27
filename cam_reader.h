@@ -1,17 +1,31 @@
 #ifndef CAM_READER_H
 #define CAM_READER_H
 
-#include <QTime>
+#include "opencv2/opencv.hpp"
 #include <thread>
 #include <mutex>
-#include <opencv2/opencv.hpp>
+#include <QTime>
+
+using namespace std;
+
+//Parameters structure for camera
+struct Camera_params{
+    string address;
+    int fps;
+    cv::Size image_size;
+    Camera_params(){
+        address="";
+        fps=25;
+        image_size=cv::Size();
+    }
+};
 
 class Cam_Reader
 {
 public:
-    Cam_Reader(std::string address="", float fps=0, cv::Size image_size=cv::Size());
+    Cam_Reader(Camera_params params=Camera_params());
     ~Cam_Reader();
-    bool initialization(std::string address="", float fps=0, cv::Size image_size=cv::Size());
+    bool initialization(Camera_params params=Camera_params());
     bool is_initialized();
     void stop_running();
     bool get_frame_rate(float &fps);
@@ -33,7 +47,6 @@ private:
 
     //Thread control
     bool running;
-    std::thread thrd;
     std::mutex mtx;
 
     //Initialized

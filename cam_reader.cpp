@@ -1,8 +1,8 @@
 #include "cam_reader.h"
 
-Cam_Reader::Cam_Reader(std::string address, float fps, cv::Size image_size){
+Cam_Reader::Cam_Reader(Camera_params params){
     this->initialized=false;
-    initialization(address, fps, image_size);
+    initialization(params);
 }
 
 Cam_Reader::~Cam_Reader(){
@@ -13,44 +13,40 @@ void Cam_Reader::stop_running(){
     mtx.lock();
     this->running=false;
     this->initialized=false;
-    this->cap.release();
     this->fps_performance=0;
     this->image_size=cv::Size();
     mtx.unlock();
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
-bool Cam_Reader::initialization(std::string address, float fps, cv::Size image_size){
-    if(!address.empty() && address!="0.0.0.0" && !is_initialized()){
-        this->mtx.lock();
+bool Cam_Reader::initialization(Camera_params params){
+    if(!params.address.empty() && params.address!="0.0.0.0" && !is_initialized()){
         std::stringstream ss;
-        ss<<address;
+        ss<<params.address;
         int num = 0;
         ss >> num;
         if(ss.good() || (num==0 && ss.str()!="0"))
-            this->cap.open(address);
+            this->cap.open(params.address);
         else
             this->cap.open(num);
-        if(fps>0)
-            this->miliseconds_cycle=1000./fps;
-        else
-            this->miliseconds_cycle=0;
-        this->image_size=image_size;
-        this->running=true;
-        this->cap.grab();
-        this->thrd=std::thread(&Cam_Reader::frame_reader,this);
-        this->thrd.detach();
-        this->t.start();
+        if(this->cap.isOpened()){
+            this->cap.grab();
+            if(params.fps>0)
+                this->miliseconds_cycle=1000./params.fps;
+            else
+                this->miliseconds_cycle=0;
+            this->image_size=image_size;
+            this->running=true;
+            std::thread thrd(&Cam_Reader::frame_reader,this);
+            thrd.detach();
+            this->t.start();
+        }
         this->initialized=this->cap.isOpened();
-        this->mtx.unlock();
     }
     return this->initialized;
 }
 
 bool Cam_Reader::is_initialized(){
-    this->mtx.lock();
     bool init=this->initialized;
-    this->mtx.unlock();
     return init;
 }
 
@@ -63,6 +59,8 @@ void Cam_Reader::frame_reader(){
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
     }
+    if(this->cap.isOpened())
+        this->cap.release();
 }
 
 cv::Mat Cam_Reader::get_image(){
@@ -71,7 +69,7 @@ cv::Mat Cam_Reader::get_image(){
         this->mtx.lock();
         this->cap.retrieve(image);
         this->mtx.unlock();
-        if(this->image_size!=cv::Size())
+        if(this->image_size!=cv::Size() && !image.empty())
             cv::resize(image,image,this->image_size);
     }
     this->underflow=true;
@@ -87,7 +85,7 @@ bool Cam_Reader::get_image(cv::Mat &image){
         this->mtx.lock();
         this->cap.retrieve(image);
         this->mtx.unlock();
-        if(this->image_size!=cv::Size())
+        if(this->image_size!=cv::Size() && !image.empty())
             cv::resize(image,image,this->image_size);
     }
     this->underflow=true;
@@ -101,9 +99,7 @@ bool Cam_Reader::get_image(cv::Mat &image){
 }
 
 bool Cam_Reader::get_frame_rate(float &fps){
-    this->mtx.lock();
     fps=this->fps_performance;
     bool ret=this->underflow && (this->miliseconds_cycle>0);
-    this->mtx.unlock();
     return ret;
 }
